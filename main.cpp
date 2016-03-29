@@ -1,8 +1,6 @@
 #include <iostream>
-#include <math.h>
 #include <algorithm>
-#include <time.h>
-#include <string>
+
 
 using namespace std;
 
@@ -24,20 +22,23 @@ void rowJoin(Node *arrayBuf[],int arraySize){
 
 #define NEXT16(x) x x x x x x x x x x x x x x x x
 
-#define NEXT256(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x)
+#define NEXT64(x) NEXT16(x) NEXT16(x) NEXT16(x) NEXT16(x)
 
-void bypass(Node *begin, int arraySize,int N){
+#define NEXT128(x) NEXT64(x) NEXT64(x)
+
+#define NEXT256(x) NEXT128(x) NEXT128(x)
+
+double bypass(Node *begin, int arraySize){
     Node * current = begin;
-    struct timespec t1, t2;
-    int size = arraySize/16;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&t1);
-    for(register int i=0;i<size-1;i++){
-        NEXT16(current = current->next;current->pad[0]++;);
+    int size = arraySize/256;
+
+    unsigned long long start = __rdtsc();
+    for(int i=0;i<size;i++){
+        NEXT256(*current;current = current->next;);
     }
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&t2);
-    cout << N << ";" << 1000000000. *
-                                (((t2.tv_sec + t2.tv_nsec * 1.e-9)
-                                  - (t1.tv_sec + t1.tv_nsec * 1.e-9)))/arraySize << "\n";
+    unsigned long long end = __rdtsc();
+
+    return (end - start)/arraySize;
 }
 
 void randJoin(Node *arrayBuf[],int arraySize){
@@ -46,11 +47,11 @@ void randJoin(Node *arrayBuf[],int arraySize){
     for(int i=0;i<arraySize;i++){
         arrayIndexs[i] = i;
     }
-    random_shuffle(&arrayIndexs[0],&arrayIndexs[arraySize]);//перемешиваем
+    random_shuffle(&arrayIndexs[0],&arrayIndexs[arraySize-1]);//перемешиваем
 
     int startIndex = 0;
     Node * current = &array[startIndex];
-    for(int i=1;i<arraySize-1;i++){//линкуем структуры
+    for(int i=0;i<arraySize;i++){
         if(arrayIndexs[i] != startIndex) {
             current->next = &array[arrayIndexs[i]];
             current = current->next;
@@ -63,33 +64,25 @@ void randJoin(Node *arrayBuf[],int arraySize){
 //14 21
 int main(int argc, char *argv[]) {
 
-    //string mode = "rand";
+    for(int N=28;N>9;N--) {
+        double sum = 0;
+        int count = 10;
+        for(int m=0;m<count;m++) {
+            int arraySize = pow(2,N)/sizeof(Node);
+            Node *array = new Node[arraySize];
 
-    //if(argc>1){
-    //    N = atoi(argv[1]);
-    //    mode = argv[2];
-    //}
-
-    for(int k=28;k>9;k--) {
-        int N = k;
-        int arraySize = pow(2, N) / sizeof(Node);
-        Node *array = new Node[arraySize];
-
-        for (int i = 0; i < arraySize; i++) {
-            for (int j = 0; j < NPAD; j++) {
-                array[i].pad[j] = rand() % 1000;
+            for (int i = 0; i < arraySize; i++) {
+                for (int j = 0; j < NPAD; j++) {
+                    array[i].pad[j] = rand() % 1000;
+                }
             }
+
+            randJoin(&array, arraySize);
+
+            sum += bypass(&array[0], arraySize);
+            delete[] array;
         }
-
-        //if(mode == "rand")
-        //    randJoin(&array, arraySize);
-        //if(mode == "row")
-        //    rowJoin(&array, arraySize);
-
-        rowJoin(&array, arraySize);
-
-        bypass(&array[0], arraySize,N);
-        delete[] array;
+        cout << N << ";" << sum/count << "\n";
     }
 
     return 0;
