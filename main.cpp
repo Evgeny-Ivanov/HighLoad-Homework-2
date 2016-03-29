@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
     for(int N=28;N>9;N--) {
         double sum = 0;
-        int count = 10;
+        int count = 250;
         for(int m=0;m<count;m++) {
             int arraySize = pow(2,N)/sizeof(Node);
             Node *array = new Node[arraySize];
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            randJoin(&array, arraySize);
+            rowJoin(&array, arraySize);
 
             sum += bypass(&array[0], arraySize);
             delete[] array;
