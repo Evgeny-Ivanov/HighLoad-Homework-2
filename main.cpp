@@ -52,7 +52,7 @@ void randJoin(Node *arrayBuf[],int arraySize){
             current = current->next;
         }
     }
-    array[arraySize-1].next = &array[startIndex];//замкнутый список
+    array[arrayIndexs[arraySize-1]].next = &array[startIndex];//замкнутый список
     delete[] arrayIndexs;
 }
 
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            rowJoin(&array, arraySize);
+            randJoin(&array, arraySize);
 
             sum += bypass(&array[0], arraySize);
             delete[] array;
